@@ -6,7 +6,7 @@ const mongoUrl = `mongodb+srv://elodierondet2:bMqG6y7b80SKYjmy@cluster0.lvpdn4f.
 const { userRouter } = require("./routers/users.router");
 const { bookRouter } = require("./routers/books.router");
 const path = require('path');
-
+const multer = require('multer');
 const app = express();
 
 // Middlewares
@@ -26,6 +26,9 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
     next();
   });
+
+
+ 
 
   async function connect() {
     try {

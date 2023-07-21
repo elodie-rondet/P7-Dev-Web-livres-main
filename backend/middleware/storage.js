@@ -1,7 +1,5 @@
 const multer = require('multer');
 const { Book } = require("../models/Book");
-const express = require("express");
-const { checkToken } = require("../middleware/auth");
 
 const MIME_TYPES = {
   'image/jpg': 'jpg',
@@ -13,8 +11,6 @@ const storage = multer.diskStorage({
   destination: (req, file, callback) => {
 	const id = req.params.id;
 	callback(null, "image");
-	callback(null, "image/livre");
-	callback(null, "image/livre/modifier");
   },
   filename: (req, file, callback) => {
     const name = file.originalname.split(' ').join('_');
@@ -24,3 +20,6 @@ const storage = multer.diskStorage({
 });
 
 module.exports = { storage };
+
+
+
