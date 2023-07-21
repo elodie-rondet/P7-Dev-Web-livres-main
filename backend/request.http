@@ -1,0 +1,21 @@
+DELETE http://localhost:4000/api/books/6466c55cec8bc1d7cf2758bf
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDY2YzllZTA5ZTY4NTI1OTcwYWI5YzAiLCJpYXQiOjE2ODQ0NTc5Njh9.BaRzm_cJ_x4ddQac-Vk80wUXtqWRMoW2Et7kbyuJW8o
+###
+
+GET http://localhost:4000/api/books/bestrating
+
+###
+GET http://localhost:4000/api/books/6466c55cec8bc1d7cf2758bf
+
+###
+POST http://localhost:4000/api/books/6466c55cec8bc1d7cf2758bf/rating
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2NDY2YzllZTA5ZTY4NTI1OTcwYWI5YzAiLCJpYXQiOjE2ODQ0NTc5Njh9.BaRzm_cJ_x4ddQac-Vk80wUXtqWRMoW2Et7kbyuJW8o
+
+{"rating": 5,"userId": "admin"}
+
+###
+POST http://localhost:4000/api/auth/login
+
+{
+    "password": "admin"
+}
