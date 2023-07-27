@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require('mongoose');
 const cors = require("cors");
 require("dotenv").config();
-const mongoUrl = `mongodb+srv://elodierondet2:bMqG6y7b80SKYjmy@cluster0.lvpdn4f.mongodb.net/`;
+const mongoUrl = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0.lvpdn4f.mongodb.net/`;
 const { userRouter } = require("./routers/users.router");
 const { bookRouter } = require("./routers/books.router");
 const path = require('path');
