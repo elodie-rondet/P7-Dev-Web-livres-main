@@ -1,9 +1,9 @@
 const { Book } = require("../models/Book");
-const multer = require("multer");
-const { storage } = require("../middleware/storage");
+const sharp = require("sharp");
+const path = require("path");
+const fs = require("fs");
     
 
-  exports.upload = multer({ storage: storage }).single("image");
   exports.getBooksWithBestRating = async function (req, res) {
   const books =  await Book.find().sort({ averageRating: -1 }).limit(3);
   for (let i = 0; i < books.count; ++i) {
@@ -28,7 +28,8 @@ exports.putBook = async function (req, res) {
       ratings: [
         {
           userId: req.body.userId,
-          grade: book.ratings != null ? book.ratings.find((id) => id.userId === book.userId).grade : null
+          grade: book.ratings.find((id) => id.userId === book.userId) !== undefined ? 
+          book.ratings.find((id) => id.userId === book.userId).grade : 0
         }
       ],
       averageRating: calculateAverageRating(book.ratings)
@@ -43,55 +44,30 @@ exports.putBook = async function (req, res) {
 exports.postRating = async function (req, res) {
   const id = req.params.id;
   if (id == null || id == "undefined") {
-    res.status(400).send("Book id is missing");
+    res.status(400).send("Le livre n'a pas été trouvé");
     return;
   }
   const rating = req.body.rating;
+
   try {
     const book = await Book.findById(id);
     if (book == null) {
       res.status(404).send("Book not found");
       return;
     }
-    const newBook = new Book({
-      userId: book.userId,
-      title: book.title,
-      author: book.author,
-      imageUrl: file.filename,
-      year: book.year,
-      genre: book.genre,
-      ratings: [
-        {
-          userId: book.userId,
-          grade: book.ratings.find((obj) => obj.userId === book.userId).grade
-        }
-      ],
-      averageRating: calculateAverageRating(book.ratings)
-    });
-    const ratingsInDb = book.ratings;
-    const previousRatingFromCurrentUser = ratingsInDb.find((rating) => rating.userId == id);
+
+    const previousRatingFromCurrentUser = book.ratings.find((id) => id.userId === req.body.userId);
+    console.log(previousRatingFromCurrentUser);
     if (previousRatingFromCurrentUser != null) {
-      res.status(400).send("You have already rated this book");
+      res.status(400).send("Vous avez déjà noté ce livre");
       return;
     }
-    const newRating = { id: userId, grade: rating };
-    ratingsInDb.push(newRating);
-    book.averageRating = calculateAverageRating(ratingsInDb);
+    const newRating = { userId:req.body.userId, grade: rating };
+    book.ratings.push(newRating);
+    console.log(book.ratings)
+    if (book.ratings) book.averageRating = calculateAverageRating(book.ratings);
     await book.save();
-    res.send(newRating);
-  } catch (e) {
-    console.error(e);
-    res.status(500).send("Something went wrong:" + e.message);
-  }
-}
-
-exports.getBestRating = async function (req, res) {
-  try {
-    const booksWithBestRatings = await Book.find().sort({ rating: -1 }).limit(3);
-    booksWithBestRatings.forEach((book) => {
-      book.imageUrl = `${req.protocol}://${req.get('host')}/${book.imageUrl}`;
-    });
-    res.send(booksWithBestRatings);
+    res.send(book);
   } catch (e) {
     console.error(e);
     res.status(500).send("Something went wrong:" + e.message);
@@ -118,21 +94,29 @@ exports.deleteBook = async function (req, res) {
   exports.getBook= async function (req, res) {
   const id = req.params.id;
   const book = await Book.findById(id);
-  book.imageUrl = `${req.protocol}://${req.get('host')}/${book.imageUrl}`;
   res.send(book);
 }
 
 
-  exports.postBooks  = function (req, res) {
+  exports.postBooks  = async function (req, res) {
   const bookStringified = req.body.book;
   const book = JSON.parse(bookStringified);
   const file = req.file;
+  let { filename } = file;
+
+  const lastDotIndex = filename.lastIndexOf('.');
+  filename = filename.slice(0, lastDotIndex) + '-sharp.webp';
+  
+const QUALITY_RATIO = 90;
+const MAX_WIDTH_PX = 350;
+const MAX_HEIGHT_PX = 500;
+  
   try {
     const newBook = new Book({
       userId: book.userId,
       title: book.title,
       author: book.author,
-      imageUrl: file.filename,
+      imageUrl: `${req.protocol}://${req.get('host')}/${filename}`,
       year: book.year,
       genre: book.genre,
       ratings: [
@@ -143,12 +127,27 @@ exports.deleteBook = async function (req, res) {
       ],
       averageRating: calculateAverageRating(book.ratings)
     });
+  
+      await sharp(file.path)
+        .resize(MAX_WIDTH_PX, MAX_HEIGHT_PX, { fit: 'cover' })
+        .webp({ quality: QUALITY_RATIO })
+        .toFile(path.resolve(file.destination, filename));
+      req.file.filename = filename;
+    
     newBook.save();
     res.send(newBook);
   } catch (error) {
     console.error(error);
   }
+  finally {
+    try {
+      fs.unlinkSync(file.path);
+    } catch (error) {
+        console.log(error)
+    }
+  }
 }
+
 
 
 
